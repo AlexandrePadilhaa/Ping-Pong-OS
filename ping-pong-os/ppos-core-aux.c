@@ -402,6 +402,43 @@ task_t * scheduler() {
         return readyQueue;
     }
     return NULL;
+  
+  //(SRTF – Short Remaining Time First)
+  //return NULL;
+}
+// funções 1.2.a
+void task_set_eet (task_t *task, int et){
+
+    if(task != NULL){//ajuste na tarefa enviada
+        task->eet = et;
+        task->ret = task->eet - task->tempo_decorrido;
+      
+    }else{//ajuste na tarefa em execução
+        taskExec->eet = et;
+        taskExec->ret = task->eet - task->tempo_decorrido;
+      
+    }
+
+}
+
+int task_get_eet(task_t *task){
+
+    if(task != NULL){
+        return task->eet;
+    }else{
+        return taskExec->eet;
+    }
+
+}
+
+int task_get_ret(task_t *task) { 
+  
+    if(task != NULL){
+        return task->ret;
+    }else{
+        return taskExec->ret;
+    }
+
 }
 
 
