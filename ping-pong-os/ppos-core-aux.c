@@ -397,11 +397,67 @@ int after_mqueue_msgs (mqueue_t *queue) {
 }
 
 task_t * scheduler() {
-    // FCFS scheduler
-    if ( readyQueue != NULL ) {
-        return readyQueue;
+    printf("iniciando scheduler\n");
+    task_t *task_auxiliar = NULL;
+
+    // se a fila estiver vazia
+    if (readyQueue == NULL){
+        return NULL;
+	} 
+    //se a fila contiver um ou mais elementos
+    else {
+        task_t* task_priori = readyQueue; // ponteiro para a tarefa que será escolhida
+        task_auxiliar = readyQueue;
+
+        do{ // se o tempo restante da task atual for maior que a task pronta, ela será trocada
+            if(task_get_ret(NULL) >  task_get_eet(&task_auxiliar) ){
+                task_priori = task_auxiliar;
+            }
+            //Proxima tarefa a ser comparada
+            task_auxiliar = task_auxiliar->next;
+
+        } while(task_auxiliar != readyQueue);  // só finaliza ao encontrar a próxima a ser executada
+    
+        task_auxiliar = task_priori;
     }
-    return NULL;
+    printf("task %d foi escolhida pelo scheduler\n", task_aux->t_id);
+
+    return task_auxiliar;
+    //implementar (SRTF – Short Remaining Time First)
+}
+
+// funções 1.2.a
+void task_set_eet (task_t *task, int et){
+
+    if(task != NULL){//ajuste na tarefa enviada
+        task->eet = et;
+        task->ret = task->eet - task->tempo_decorrido;
+      
+    }else{//ajuste na tarefa em execução
+        taskExec->eet = et;
+        taskExec->ret = task->eet - task->tempo_decorrido;
+      
+    }
+
+}
+
+int task_get_eet(task_t *task){
+
+  if(task != NULL){
+    return task->eet;
+  }else{
+    return taskExec->eet;
+  }
+}
+
+int task_get_ret(task_t *task) { 
+  
+  if(task != NULL){
+    return task->ret;
+  }else{
+    return taskExec->ret;
+}
+
 }
 
 
