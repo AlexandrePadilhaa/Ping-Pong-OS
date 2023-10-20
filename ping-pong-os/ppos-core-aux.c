@@ -410,7 +410,7 @@ task_t * scheduler() {
         task_auxiliar = readyQueue;
 
         do{ // se o tempo restante da task atual for maior que a task pronta, ela será trocada
-            if(task_get_ret(NULL) >  task_get_eet(&task_auxiliar) ){
+            if(task_get_ret(NULL) >  task_get_eet(task_auxiliar) ){
                 task_priori = task_auxiliar;
             }
             //Proxima tarefa a ser comparada
@@ -420,7 +420,7 @@ task_t * scheduler() {
     
         task_auxiliar = task_priori;
     }
-    printf("task %d foi escolhida pelo scheduler\n", task_aux->t_id);
+    printf("task %d foi escolhida pelo scheduler\n", task_auxiliar->id);
 
     return task_auxiliar;
     //implementar (SRTF – Short Remaining Time First)
