@@ -27,6 +27,7 @@ void after_ppos_init () {
 
 void before_task_create (task_t *task ) {
     // put your customization here
+     task_set_eet(task,99999);
 #ifdef DEBUG
     printf("\ntask_create - BEFORE - [%d]", task->id);
 #endif
@@ -41,6 +42,10 @@ void after_task_create (task_t *task ) {
 
 void before_task_exit () {
     // put your customization here
+    //Atualizar tempo
+    taskExec->tempo_final = /*tempo atual*/ 100 - taskExec->tempo_inicial;
+    task_set_eet(taskExec, taskExec->tempo_final);
+    //printf("\ntask_exit - BEFORE - [%d] eet: [%d]", taskExec->id, task_get_eet(taskExec));
 #ifdef DEBUG
     printf("\ntask_exit - BEFORE - [%d]", taskExec->id);
 #endif
@@ -69,6 +74,10 @@ void after_task_switch ( task_t *task ) {
 
 void before_task_yield () {
     // put your customization here
+    //Atualizar tempo
+    taskExec->tempo_final = /*tempo atual*/ 100 - taskExec->tempo_inicial;
+    task_set_eet(taskExec, taskExec->tempo_final);
+    printf("\ntask_yield - BEFORE - [%d] eet: [%d]", taskExec->id, task_get_eet(taskExec));
 #ifdef DEBUG
     printf("\ntask_yield - BEFORE - [%d]", taskExec->id);
 #endif
