@@ -23,6 +23,7 @@ typedef struct task_t
    struct task_t* joinQueue;
    int exitCode;
    unsigned int awakeTime; // used to store the time when it should be waked up
+   char tipo_task; // tipo da task, 0 para tarefa de sistema, 1 para tarefa de usuario
 
    // ... (outros campos deve ser adicionados APOS esse comentario)
   int eet;//estimated execution time
@@ -31,8 +32,8 @@ typedef struct task_t
   int tempo_inicial;
   int tempo_decorrido_inicial;
 
-  int tempo_final;
-  int tempo_decorrido;
+  unsigned int tempo_final;
+  unsigned int tempo_decorrido;
    
 } task_t ;
 

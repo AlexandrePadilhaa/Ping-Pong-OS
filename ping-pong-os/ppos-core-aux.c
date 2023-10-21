@@ -1,33 +1,135 @@
 #include "ppos.h"
 #include "ppos-core-globals.h"
 
-
 // ****************************************************************************
 // Coloque aqui as suas modificações, p.ex. includes, defines variáveis, 
 // estruturas e funções
 
+#include <signal.h>
+#include <sys/time.h>
+
+#define TASK_TIPO_SISTEMA '0'
+#define TASK_TIPO_USUARIO '1'
+#define QUANTUM_MAX 20
+#define TEMPO_DEFAULT 99999
+
+// estrutura que define um tratador de sinal (deve ser global ou static)
+struct sigaction action;
+
+// estrutura de inicialização to timer
+struct itimerval timer;
+
+// estrutura do relogio
+int quantum = QUANTUM_MAX;
+
+
+// funções 1.2.a
+void task_set_eet (task_t *task, int et){ //seta tempo estimado
+
+    if(task != NULL){//ajuste na tarefa do parametro
+        task->eet = et;
+        task->ret = task->eet - task->tempo_decorrido;
+      
+    }else{//ajuste na tarefa em execução
+        taskExec->eet = et;
+        taskExec->ret = task->eet - task->tempo_decorrido;
+      
+    }
+
+}
+
+int task_get_eet(task_t *task){	// retorna tempo estimado
+  if(task != NULL){
+    return task->eet;
+  }else{
+    return taskExec->eet;
+  }
+}
+
+int task_get_ret(task_t *task) { // retorna tempo restante
+  if(task != NULL){
+    return task->ret;
+  } else{
+    return taskExec->ret;
+  }
+}
+
+//Quando uma tarefa recebe o processador, o dispatcher ajusta um contador de ticks que
+//essa tarefa pode usar, ou seja, seu quantum definido em número de ticks. A cada tick, esse contador
+//deve ser decrementado; quando ele chegar a zero, o processador deve ser devolvido ao dispatcher
+//e a tarefa volta à fila de prontas.
+ 
+// TIMER
+static void temporizador () {
+	systemTime++;
+
+	if (taskExec != NULL) {
+			if (taskExec->tipo_task == TASK_TIPO_USUARIO) { //se é tarefa de sistema, executa a preempcao
+					quantum--;
+					//task_set_eet(taskExec, task_get_eet(NULL) + 1);
+					taskExec->tempo_decorrido = taskExec->tempo_decorrido + 1;
+			}
+
+			if (quantum <= 0 && taskExec != taskDisp) {
+					task_yield();
+					quantum = QUANTUM_MAX;
+			}
+	}
+}
+
+void preeptor ()
+{
+  // registra a ação para o sinal de timer SIGALRM
+  action.sa_handler = temporizador;
+  sigemptyset (&action.sa_mask) ;
+  action.sa_flags = 0 ;
+  if (sigaction (SIGALRM, &action, 0) < 0)
+  {
+    perror ("Erro em sigaction: ");
+    exit (1) ;
+  }
+
+  // ajusta valores do temporizador
+  timer.it_value.tv_usec = 1000;      // primeiro disparo, em micro-segundos que é 1000 para ser mili
+	timer.it_value.tv_sec  = 0 ;      // primeiro disparo, em segundos
+  timer.it_interval.tv_usec = 1000;   // disparos subsequentes, em micro-segundos que é 1000 para ser mili
+	timer.it_interval.tv_sec  = 0 ;   // disparos subsequentes, em segundos
+
+  // arma o temporizador ITIMER_REAL (vide man setitimer)
+  if (setitimer (ITIMER_REAL, &timer, 0) < 0)
+  {
+    perror ("Erro em setitimer: ");
+    exit (1) ;
+  }
+}
+
 
 // ****************************************************************************
 
-
-
 void before_ppos_init () {
     // put your customization here
+		preeptor();
 #ifdef DEBUG
     printf("\ninit - BEFORE");
 #endif
 }
 
 void after_ppos_init () {
-    // put your customization here
+    // seta tipo da task
+		task_set_eet(taskDisp, TEMPO_DEFAULT);
+    task_set_eet(taskMain, TEMPO_DEFAULT);
+		taskDisp->tipo_task = TASK_TIPO_USUARIO;
 #ifdef DEBUG
     printf("\ninit - AFTER");
 #endif
 }
 
 void before_task_create (task_t *task ) {
-    // put your customization here
-     task_set_eet(task,99999);
+    // setando tempo default
+     if(task != taskMain && task != taskDisp){
+			task_set_eet(task, TEMPO_DEFAULT);
+		 	task->tipo_task = TASK_TIPO_USUARIO;
+		 } 
 #ifdef DEBUG
     printf("\ntask_create - BEFORE - [%d]", task->id);
 #endif
@@ -35,17 +137,20 @@ void before_task_create (task_t *task ) {
 
 void after_task_create (task_t *task ) {
     // put your customization here
+		    quantum = QUANTUM_MAX;
 #ifdef DEBUG
     printf("\ntask_create - AFTER - [%d]", task->id);
 #endif
 }
 
 void before_task_exit () {
-    // put your customization here
     //Atualizar tempo
-    taskExec->tempo_final = /*tempo atual*/ 100 - taskExec->tempo_inicial;
-    task_set_eet(taskExec, taskExec->tempo_final);
+    taskExec->tempo_final = systemTime - taskExec->tempo_inicial;
+		task_set_eet(taskExec, task_get_eet(taskExec));
+
+    //task_set_eet(taskExec, task_get_eet(taskExec));
     //printf("\ntask_exit - BEFORE - [%d] eet: [%d]", taskExec->id, task_get_eet(taskExec));
+		printf("\nTask %d exit: execution time %u ms, processor time %u ms, %d activations\n",taskExec->id,taskExec->tempo_final,taskExec->tempo_decorrido, 0);
 #ifdef DEBUG
     printf("\ntask_exit - BEFORE - [%d]", taskExec->id);
 #endif
@@ -75,9 +180,9 @@ void after_task_switch ( task_t *task ) {
 void before_task_yield () {
     // put your customization here
     //Atualizar tempo
-    taskExec->tempo_final = /*tempo atual*/ 100 - taskExec->tempo_inicial;
-    task_set_eet(taskExec, taskExec->tempo_final);
-    printf("\ntask_yield - BEFORE - [%d] eet: [%d]", taskExec->id, task_get_eet(taskExec));
+    taskExec->tempo_final = systime() - taskExec->tempo_inicial;
+    task_set_eet(taskExec, task_get_eet(taskExec));
+    //printf("\ntask_yield - BEFORE - [%d] eet: [%d]", taskExec->id, task_get_eet(taskExec));
 #ifdef DEBUG
     printf("\ntask_yield - BEFORE - [%d]", taskExec->id);
 #endif
@@ -106,6 +211,7 @@ void after_task_suspend( task_t *task ) {
 
 void before_task_resume(task_t *task) {
     // put your customization here
+		task->tempo_inicial = systime();
 #ifdef DEBUG
     printf("\ntask_resume - BEFORE - [%d]", task->id);
 #endif
@@ -406,8 +512,10 @@ int after_mqueue_msgs (mqueue_t *queue) {
 }
 
 task_t * scheduler() {
-    printf("iniciando scheduler\n");
-    task_t *task_auxiliar = NULL;
+		#ifdef DEBUG
+    	printf("iniciando scheduler\n");
+		#endif
+    task_t *task_auxiliar = NULL; // task auxiliar que vai nos ajudar a retornar a menor delas
 
     // se a fila estiver vazia
     if (readyQueue == NULL){
@@ -415,12 +523,14 @@ task_t * scheduler() {
 	} 
     //se a fila contiver um ou mais elementos
     else {
-        task_t* task_priori = readyQueue; // ponteiro para a tarefa que será escolhida
+        task_t* task_priori = readyQueue; // ponteiro para a prox tarefa na fila
         task_auxiliar = readyQueue;
+				int menor_tempo = task_get_ret(task_priori);
 
-        do{ // se o tempo restante da task atual for maior que a task pronta, ela será trocada
-            if(task_get_ret(NULL) >  task_get_eet(task_auxiliar) ){
+        do{ // se o tempo restante da task for menor em comparação ao menor tempo encontrado, a nossa task auxiliar e substituida e assim por diante
+            if(task_get_ret(task_auxiliar) <  menor_tempo) {
                 task_priori = task_auxiliar;
+								menor_tempo = task_get_ret(task_auxiliar);
             }
             //Proxima tarefa a ser comparada
             task_auxiliar = task_auxiliar->next;
@@ -429,44 +539,10 @@ task_t * scheduler() {
     
         task_auxiliar = task_priori;
     }
-    printf("task %d foi escolhida pelo scheduler\n", task_auxiliar->id);
-
+		#ifdef DEBUG
+    	printf("task %d foi escolhida pelo scheduler\n", task_auxiliar->id);
+		#endif
     return task_auxiliar;
-    //implementar (SRTF – Short Remaining Time First)
-}
-
-// funções 1.2.a
-void task_set_eet (task_t *task, int et){
-
-    if(task != NULL){//ajuste na tarefa enviada
-        task->eet = et;
-        task->ret = task->eet - task->tempo_decorrido;
-      
-    }else{//ajuste na tarefa em execução
-        taskExec->eet = et;
-        taskExec->ret = task->eet - task->tempo_decorrido;
-      
-    }
-
-}
-
-int task_get_eet(task_t *task){
-
-  if(task != NULL){
-    return task->eet;
-  }else{
-    return taskExec->eet;
-  }
-}
-
-int task_get_ret(task_t *task) { 
-  
-  if(task != NULL){
-    return task->ret;
-  }else{
-    return taskExec->ret;
-}
-
 }
 
 
