@@ -106,11 +106,15 @@ int task_getprio (task_t *task) ;
 task_t * scheduler() ;
 
 // operações de gestão do tempo ================================================
-void task_set_eet (task_t *task, int et);
 
-int task_get_eet(task_t *task);
+//seta tempo estimado
+void task_set_eet (task_t *task, int et); 
 
-int task_get_ret(task_t *task);
+// retorna tempo estimado
+int task_get_eet(task_t *task); 
+
+// retorna tempo restante
+int task_get_ret(task_t *task); 
 
 // suspende a tarefa corrente por t milissegundos
 // essa função só funciona se o relógio do sistema estiver implementado
