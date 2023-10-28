@@ -47,16 +47,16 @@ int main (int argc, char *argv[])
 
    ppos_init () ;
 
-    task_create (&Pang, Body, "    Pang (tarefa 1)") ;
-   task_set_eet(&Pang, 99000);
-   task_create (&Peng, Body, "        Peng (tarefa 2)") ;
-   task_set_eet(&Peng, 88000);
-   task_create (&Ping, Body, "            Ping (tarefa 3)") ;
-   task_set_eet(&Ping, 77000);
-   task_create (&Pong, Body, "                Pong (tarefa 4)") ;
-   task_set_eet(&Pong, 99999);
-   task_create (&Pung, Body, "                    Pung (tarefa 5)") ;
-   task_set_eet(&Pung, 80000);
+    task_create (&Pang, Body, "    Pang ") ;
+   //task_set_eet(&Pang, 9900);
+   task_create (&Peng, Body, "        Peng ") ;
+   //task_set_eet(&Peng, 88000);
+   task_create (&Ping, Body, "            Ping ") ;
+   //task_set_eet(&Ping, 77000);
+   task_create (&Pong, Body, "                Pong ") ;
+   //task_set_eet(&Pong, 66000);
+   task_create (&Pung, Body, "                    Pung ") ;
+   //task_set_eet(&Pung, 55000);
 
    task_join(&Pang);
    task_join(&Peng);
