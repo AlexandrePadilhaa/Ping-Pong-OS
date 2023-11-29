@@ -60,18 +60,20 @@ int task_get_ret(task_t *task) {
 //deve ser decrementado; quando ele chegar a zero, o processador deve ser devolvido ao dispatcher
 //e a tarefa volta à fila de prontas.
 
-static void temporizador () {
+static void temporizador () {// contar tarefas sistema
 	systemTime++;
 	if (taskExec != NULL) {
+        taskExec->tempo_decorrido++;
+         //Atualizar tempo
+        taskExec->tempo_final = systemTime - taskExec->tempo_inicial;
 		if (taskExec->tipo_task == TASK_TIPO_USUARIO) { //se é tarefa de sistema, executa a preempcao
 			quantum--;
-			//task_set_eet(taskExec, task_get_eet(NULL) + 1);
-			taskExec->tempo_decorrido++;
 		}
-
-		if (quantum <= 0 && taskExec != taskDisp) {
+        task_set_eet(taskExec, task_get_eet(NULL) );
+        
+		if (quantum <= 0 && taskExec != taskDisp) {         
 			task_yield();
-			quantum = QUANTUM_MAX;
+            quantum = QUANTUM_MAX;			
 		}
 	}
 }
