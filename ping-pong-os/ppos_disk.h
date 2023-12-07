@@ -15,6 +15,10 @@
 typedef struct
 {
   // completar com os campos necessarios
+  int numBlocks; //256
+  int blockSize; //64
+  int block;
+  void *buffer;
 } disk_t ;
 
 // inicializacao do gerente de disco
