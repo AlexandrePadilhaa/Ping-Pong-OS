@@ -30,11 +30,11 @@ void task_set_eet (task_t *task, int et){
     if(task != NULL){//ajuste na tarefa do parametro
         task->eet = et;
         task->ret = task->eet - task->tempo_decorrido;
-      
+
     }else{//ajuste na tarefa em execução
         taskExec->eet = et;
         taskExec->ret = task->eet - task->tempo_decorrido;
-      
+
     }
 
 }
@@ -60,18 +60,20 @@ int task_get_ret(task_t *task) {
 //deve ser decrementado; quando ele chegar a zero, o processador deve ser devolvido ao dispatcher
 //e a tarefa volta à fila de prontas.
 
-static void temporizador () {
+static void temporizador () {// contar tarefas sistema
 	systemTime++;
 	if (taskExec != NULL) {
+        taskExec->tempo_decorrido++;
+         //Atualizar tempo
+        taskExec->tempo_final = systemTime - taskExec->tempo_inicial;
 		if (taskExec->tipo_task == TASK_TIPO_USUARIO) { //se é tarefa de sistema, executa a preempcao
 			quantum--;
-			//task_set_eet(taskExec, task_get_eet(NULL) + 1);
-			taskExec->tempo_decorrido++;
 		}
+        task_set_eet(taskExec, task_get_eet(NULL) );
 
-		if (quantum <= 0 && taskExec != taskDisp) {
+		if (quantum <= 0 && taskExec != taskDisp) {         
 			task_yield();
-			quantum = QUANTUM_MAX;
+            quantum = QUANTUM_MAX;			
 		}
 	}
 }
@@ -534,7 +536,7 @@ task_t * scheduler() {
             task_auxiliar = task_auxiliar->next;
 
         } while(task_auxiliar != readyQueue);  // só finaliza ao encontrar a próxima a ser executada
-    
+
         task_auxiliar = task_priori;
     }
     return task_auxiliar;
@@ -543,5 +545,4 @@ task_t * scheduler() {
     	printf("task %d foi escolhida pelo scheduler\n", task_auxiliar->id);
 	#endif
 }
-
 

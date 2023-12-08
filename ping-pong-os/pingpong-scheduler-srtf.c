@@ -67,7 +67,7 @@ void Body (void * arg)
 int main (int argc, char *argv[])
 {
   int i, aux_time;
-  
+
   printf ("main: inicio\n");
 
   ppos_init () ;
