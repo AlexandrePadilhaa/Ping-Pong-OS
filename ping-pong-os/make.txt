@@ -1,14 +1,16 @@
+#makefile projeto A
+
 #Compilador
 CC=gcc
 
 #Flags
-CFLAGS= #-DDEBUG
+CFLAGS= -lrt #-DDEBUG
 
 #dependencias
 DEPS=*.h
 
 #objetos
-OBJ=ppos-core-aux.o  pingpong-disco1.o ppos_disk.o  
+OBJ=ppos-core-aux.o  pingpong-scheduler-srtf.o  #pingpong-preempcao.o #pingpong-scheduler-srtf.o 
 
 #biblioteca
 LIB=libppos_static.a
@@ -16,12 +18,9 @@ LIB=libppos_static.a
 ppos-core-aux.o: ppos-core-aux.c $(DEPS)
 	$(CC) -g -c -o $@ $< $(CFLAGS)	
 
-pingpong-disco1.o: pingpong-disco1.c $(DEPS)
+pingpong-scheduler-srtf.o: pingpong-scheduler-srtf.c $(DEPS)
 	$(CC) -g -c -o $@ $< $(CFLAGS)	
 
-ppos_disk.o: ppos_disk.c $(DEPS)
-	$(CC) -g -c -o $@ $< $(CFLAGS)	
-	
 #pingpong-preempcao.o: pingpong-preempcao.c $(DEPS)
 #	$(CC) -g -c -o $@ $< $(CFLAGS)	
 
@@ -31,6 +30,7 @@ ppos-test: $(OBJ)
 
 run: ppos-test
 	./ppos-test
+
 
 clean:
 	rm -f $(OBJ)
