@@ -24,39 +24,34 @@ void capturaSinal(int signum) {
 }
 
 //Escalonamento CSCAN - Circular Scan
-Pedido *escalonamentoCSCAN() {
+void escalonamentoCSCAN() {
   if (fila_pedidos != NULL) {
     Pedido *task_priori = fila_pedidos; // ponteiro para a próxima tarefa na fila
     Pedido *task_auxiliar = fila_pedidos;
-    int menor_dist = abs(fila_pedidos->cabeca - task_priori->bloco);
+    int menor_dist = abs(fila_pedidos->head - task_priori->bloco);
     int dist_aux = 0;
 
     // Encontrar a tarefa com menor distância em relação a cabeça de leitura
     do {
-      int dist_aux = abs(fila_pedidos->cabeca - task_auxiliar->bloco);
+      int dist_aux = abs(fila_pedidos->head - task_auxiliar->bloco);
       if (dist_aux < menor_dist) {
         task_priori = task_auxiliar;
         menor_dist = dist_aux;
       }
       // Próxima tarefa a ser comparada
-      task_auxiliar = task_auxiliar->next;
+      task_auxiliar = task_priori;
     } while (task_auxiliar != fila_pedidos); // só finaliza ao encontrar a próxima a ser executada
 
-    // se a tarefa com menor distancia esta na parte superior do disco (ou na mesma posição da cabeça), a função retorna essa tarefa removendo-a da fila
-    if (task_priori->bloco >= disco->cabeca) {
+    // se a tarefa com menor distancia esta na parte inferior do disco (ou na mesma posição da cabeça), a função retorna essa tarefa removendo-a da fila
+    if (task_priori->bloco <= fila_pedidos->head) {
       return (Pedido *)queue_remove((queue_t **)&fila_pedidos, (queue_t *)task_priori);
     } else { 
-      // senao a tarefa com menor distancia esta na parte inferior do disco, a cabeça de leitura é movida para a extremidade inferior do disco
-      disco->cabeca = 0;
+      // senao a tarefa com menor distancia esta na parte superior do disco, a cabeça de leitura é movida para a extremidade inferior do disco
+      fila_pedidos->head = 0;
       // encontra a tarefa mais próxima nessa parte da fila e a remove
-      task_auxiliar = fila_pedidos;
-      while (task_auxiliar->next != fila_pedidos && task_auxiliar->bloco <= disco->cabeca) {
-        task_auxiliar = task_auxiliar->next;
-      }
-      if (task_auxiliar->bloco <= disco->cabeca) {
+      task_auxiliar = fila_pedidos->next;
+      if (task_auxiliar->bloco <=  fila_pedidos->head) {
         return (Pedido *)queue_remove((queue_t **)&fila_pedidos, (queue_t *)task_auxiliar);
-      } else {
-        return (Pedido *)queue_remove((queue_t **)&fila_pedidos, (queue_t *)task_priori);
       }
     }
   } else {
@@ -65,26 +60,25 @@ Pedido *escalonamentoCSCAN() {
 }
 
 //Escalonamento FCFS - Shortest Seek-Time First
-Pedido* escalonamentoSSTF(){
+void escalonamentoSSTF(){
   if(fila_pedidos != NULL) {
-    Pedido* task_priori = fila_disco; // ponteiro para a prox tarefa na fila
-    Pedido* task_auxiliar = fila_disco;
-		int menor_dist = abs(fila_disco->cabeca - task_priori->block);
+    Pedido* task_priori = fila_pedidos; // ponteiro para a prox tarefa na fila
+    Pedido* task_auxiliar = fila_pedidos;
+		int menor_dist = abs(fila_pedidos->head - task_priori->bloco);
     int dist_aux = 0;
 
     do{ // se a distância da task for menor em comparação a menor distancia encontrada, a nossa task auxiliar eh substituida e assim por diante
-        int dist_aux = abs(fila_disco->cabeca - task_auxiliar->block);
+        int dist_aux = abs(fila_pedidos->head - task_auxiliar->bloco);
         if(dist_aux <  menor_dist) {
             task_priori = task_auxiliar;
 						menor_dist = dist_aux;
         }
         //Proxima tarefa a ser comparada
-        task_auxiliar = task_auxiliar->next;
-
-    } while(task_auxiliar != fila_disco);  // só finaliza ao encontrar a próxima a ser executada
+        task_auxiliar = task_auxiliar;
+    } while(task_auxiliar != fila_pedidos);  // só finaliza ao encontrar a próxima a ser executada
 
     task_auxiliar = task_priori;
-    return (Pedido *) queue_remove((queue_t **) &fila_disco, (queue_t *) task_auxiliar);
+    return (Pedido *) queue_remove((queue_t **) &fila_pedidos, (queue_t *) task_auxiliar);
 
   } else {
     return 0;
@@ -92,7 +86,7 @@ Pedido* escalonamentoSSTF(){
 }
 
 //Escalonamento FCFS - First Come, First Served
-Pedido* escalonamentoFCFS(){
+void escalonamentoFCFS(){
   if(fila_pedidos != NULL) {
      return (Pedido *) queue_remove((queue_t **)&fila_pedidos, (queue_t *)fila_pedidos->head);
   } else {
@@ -101,7 +95,7 @@ Pedido* escalonamentoFCFS(){
 }
 
 // interface de gerencia do disco
-void gerenciaDisco() {
+void gerenciaDisco(void * args) {
    /*IMPLEMENTAR*/
 }
 
@@ -126,22 +120,21 @@ int disk_mgr_init(int *numBlocos, int *tamBloco) {
   // inicializa disco
   disco = (disk_t *)malloc(sizeof(disk_t));
   disco->sem_disco = (semaphore_t *)malloc(sizeof(semaphore_t));
-  disco->tarefas_supensas = (semaphore_t *)malloc(sizeof(semaphore_t));
+  disco->tarefas_suspensas = (semaphore_t *)malloc(sizeof(semaphore_t));
   disco->state = 0; // sem uso
-  sem_create(disco->tarefas_supensa, 0);
-  // sem_create para tarefas_supensas
+  sem_create(disco->tarefas_suspensas, 0);
 
   // inicializa tarefa gerenciadora
   disco->tarefa_gerenciadora = (disk_t *)malloc(sizeof(disk_t));
   disco->tarefa_gerenciadora->tipo_task = 0; // setando como tarefa de sistema
   disco->tarefa_gerenciadora->next = disco->tarefa_gerenciadora->prev = NULL;
-  task_create(&disco->tarefa_gerenciadora, diskManager,
+  task_create(&disco->tarefa_gerenciadora, gerenciaDisco,
               "Gerenciadora de disco");
 
   // inicializa fila de pedidos
   fila_pedidos = (FilaPedidos *)malloc(sizeof(FilaPedidos));
-  fila_pedidos->head = NULL;
-  fila_pedidos->tail = NULL;
+  fila_pedidos->next = NULL;
+  fila_pedidos->prev = NULL;
 
   // inicializa sinal
   action.sa_handler = capturaSinal;
@@ -164,7 +157,7 @@ int disk_block_read(int bloco, void *buffer) {
   }
 
   //solicita semaforo
-  sem_down(&disco.sem_disco);
+  sem_down(&disco->sem_disco);
 
   Pedido pedidoLeitura;
   pedidoLeitura.bloco = bloco;
@@ -181,10 +174,10 @@ int disk_block_read(int bloco, void *buffer) {
    }
 
    //libera semaforo
-   sem_up(&disco.sem_disco);
+   sem_up(&disco->sem_disco);
 
   //suspende tarefa
-   task_suspend(taskExec,&disco->tarefas_supensas);
+   task_suspend(taskExec,&disco->tarefas_suspensas);
    task_yield();
   
   return 0;
@@ -199,7 +192,7 @@ int disk_block_write(int bloco, void *buffer) {
 
   
   //solicita semaforo
-  sem_down(&disco.sem_disco);
+  sem_down(&disco->sem_disco);
 
 
   Pedido pedidoEscrita;
@@ -217,10 +210,10 @@ int disk_block_write(int bloco, void *buffer) {
    }
 
    //libera semaforo
-   sem_up(&disco.sem_disco);
+   sem_up(&disco->sem_disco);
 
   //suspende tarefa
-   task_suspend(taskExec,&disco->tarefas_supensas);
+   task_suspend(taskExec,&disco->tarefas_suspensas);
    task_yield();
 
   return 0;

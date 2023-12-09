@@ -6,6 +6,7 @@
 
 #ifndef __DISK_MGR__
 #define __DISK_MGR__
+#include "ppos.h"
 
 // estruturas de dados e rotinas de inicializacao e acesso
 // a um dispositivo de entrada/saida orientado a blocos,
@@ -13,7 +14,7 @@
 
 // estrutura que representa um disco no sistema operacional
 typedef struct disk_t {
-  struct task_t *tarefas_supensas;    // tarefas suspensas do disco
+  struct task_t *tarefas_suspensas;    // tarefas suspensas do disco
   struct task_t *tarefa_atual;        // tarefa que esta sendo atendida
   struct task_t *tarefa_gerenciadora; // tarefa gerenciadora de disco
   int state; // indica estado do disco, 0 para livre, 1 em utilizacao
@@ -27,13 +28,13 @@ typedef struct Pedido {
   task_t *tarefa;
   void *buffer; // Ponteiro genérico para o buffer
   int bloco;    // Valor do bloco
-  int pedido;   // Valor do pedido
+  int pedido;   // Valor do pedido (0 leitura 1 escrita)
 } Pedido;
 
 typedef struct FilaPedidos {
-  struct Pedido *head;    // Ponteiro para o primeiro nó da fila
-  struct Pedido *tail;    // Ponteiro para o último nó da fila
-  int headCod;            // indica onde esta a cabeça do leitor
+  struct Pedido *next;    // Ponteiro para o primeiro nó da fila
+  struct Pedido *prev;    // Ponteiro para o último nó da fila
+  int head;            // indica onde esta a cabeça do leitor
 } FilaPedidos;
 
 // inicializacao do gerente de disco
@@ -41,13 +42,13 @@ typedef struct FilaPedidos {
 // numBlocks: tamanho do disco, em blocos
 // blockSize: tamanho de cada bloco do disco, em bytes
 
-Pedido* escalonamentoFCFS();
+void escalonamentoFCFS();
 
-Pedido* escalonamentoSSTF(int head);
+void escalonamentoSSTF();
 
-Pedido* escalonamentoCSCAN(int head);
+void escalonamentoCSCAN();
 
-void gerenciaDisco (void * args);
+void gerenciaDisco(void * args);
 
 int disk_mgr_init(int *numBlocks, int *blockSize);
 
