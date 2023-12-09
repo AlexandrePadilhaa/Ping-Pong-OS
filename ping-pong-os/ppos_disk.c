@@ -23,13 +23,49 @@ void capturaSinal(int signum) {
   disco->sinal = disco->state;
 }
 
-//Escalonamento FCFS - First Come First Served
-Pedido* Escalonamento_FCFS(){
-  return (Pedido *) queue_remove((queue_t **)&fila_pedidos, (queue_t *)fila_pedidos->head);
+//Escalonamento CSCAN - Circular Scan
+Pedido* escalonamentoCSCAN(){
+  return 0;
+}
+
+//Escalonamento FCFS - Shortest Seek-Time First
+Pedido* escalonamentoSSTF(){
+  if(fila_pedidos != NULL) {
+    Pedido* task_priori = fila_disco; // ponteiro para a prox tarefa na fila
+    Pedido* task_auxiliar = fila_disco;
+		int menor_dist = abs(fila_disco->cabeca - task_priori->block);
+    int dist_aux = 0;
+
+    do{ // se a distância da task for menor em comparação a menor distancia encontrada, a nossa task auxiliar eh substituida e assim por diante
+        int dist_aux = abs(fila_disco->cabeca - task_auxiliar->block);
+        if(dist_aux <  menor_dist) {
+            task_priori = task_auxiliar;
+						menor_dist = dist_aux;
+        }
+        //Proxima tarefa a ser comparada
+        task_auxiliar = task_auxiliar->next;
+
+    } while(task_auxiliar != fila_disco);  // só finaliza ao encontrar a próxima a ser executada
+
+    task_auxiliar = task_priori;
+    return (Pedido *) queue_remove((queue_t **) &fila_disco, (queue_t *) task_auxiliar);
+
+  } else {
+    return 0;
+  }
+}
+
+//Escalonamento FCFS - First Come, First Served
+Pedido* escalonamentoFCFS(){
+  if(fila_pedidos != NULL) {
+     return (Pedido *) queue_remove((queue_t **)&fila_pedidos, (queue_t *)fila_pedidos->head);
+  } else {
+    return 0;
+  }
 }
 
 // interface de gerencia do disco
-void diskManager() {
+void gerenciaDisco() {
    /*IMPLEMENTAR*/
 }
 
@@ -56,6 +92,7 @@ int disk_mgr_init(int *numBlocos, int *tamBloco) {
   disco->sem_disco = (semaphore_t *)malloc(sizeof(semaphore_t));
   disco->tarefas_supensas = (semaphore_t *)malloc(sizeof(semaphore_t));
   disco->state = 0; // sem uso
+  sem_create(disco->tarefas_supensa, 0);
   // sem_create para tarefas_supensas
 
   // inicializa tarefa gerenciadora
@@ -85,7 +122,7 @@ suspensa até que a operação solicitada seja completada.*/
 // leitura de um bloco, do disco para o buffer
 int disk_block_read(int bloco, void *buffer) {
 
-  if (bloco < 0 || bloco >= fila_pedidos->blocos_percorridos) {
+  if (bloco < 0 || bloco >= disco->blocos_percorridos) {
     printf("Erro: Bloco inválido.\n");
     return -1;
   }
@@ -119,7 +156,7 @@ int disk_block_read(int bloco, void *buffer) {
 
 // escrita de um bloco, do buffer para o disco
 int disk_block_write(int bloco, void *buffer) {
-  if (bloco < 0 || bloco >= fila_pedidos->blocos_percorridos) {
+  if (bloco < 0 || bloco >= disco->blocos_percorridos) {
     printf("Erro: Bloco inválido.\n");
     return -1;
   }

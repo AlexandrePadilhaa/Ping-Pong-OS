@@ -18,6 +18,7 @@ typedef struct disk_t {
   struct task_t *tarefa_gerenciadora; // tarefa gerenciadora de disco
   int state; // indica estado do disco, 0 para livre, 1 em utilizacao
   int sinal; // flag sinal de disco
+  int blocos_percorridos; // blocos percorridos pelo leitor de disco
   semaphore_t sem_disco;
   // completar com os campos necessarios
 } disk_t;
@@ -33,13 +34,21 @@ typedef struct FilaPedidos {
   struct Pedido *head;    // Ponteiro para o primeiro nó da fila
   struct Pedido *tail;    // Ponteiro para o último nó da fila
   int headCod;            // indica onde esta a cabeça do leitor
-  int blocos_percorridos; // blocos percorridos pelo leitor de disco
 } FilaPedidos;
 
 // inicializacao do gerente de disco
 // retorna -1 em erro ou 0 em sucesso
 // numBlocks: tamanho do disco, em blocos
 // blockSize: tamanho de cada bloco do disco, em bytes
+
+Pedido* escalonamentoFCFS();
+
+Pedido* escalonamentoSSTF(int head);
+
+Pedido* escalonamentoCSCAN(int head);
+
+void gerenciaDisco (void * args);
+
 int disk_mgr_init(int *numBlocks, int *blockSize);
 
 // leitura de um bloco, do disco para o buffer
