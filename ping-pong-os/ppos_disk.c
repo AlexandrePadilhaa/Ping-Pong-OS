@@ -31,7 +31,7 @@ Pedido *escalonamentoCSCAN() {
     int menor_dist = abs(fila_pedidos->cabeca - task_priori->bloco);
     int dist_aux = 0;
 
-    // Encontrar a tarefa com menor distância em relação à cabeça de leitura
+    // Encontrar a tarefa com menor distância em relação a cabeça de leitura
     do {
       int dist_aux = abs(fila_pedidos->cabeca - task_auxiliar->bloco);
       if (dist_aux < menor_dist) {
@@ -42,13 +42,13 @@ Pedido *escalonamentoCSCAN() {
       task_auxiliar = task_auxiliar->next;
     } while (task_auxiliar != fila_pedidos); // só finaliza ao encontrar a próxima a ser executada
 
-    // Verifica se é necessário fazer a busca circular
+    // se a tarefa com menor distancia esta na parte superior do disco (ou na mesma posição da cabeça), a função retorna essa tarefa removendo-a da fila
     if (task_priori->bloco >= disco->cabeca) {
       return (Pedido *)queue_remove((queue_t **)&fila_pedidos, (queue_t *)task_priori);
-    } else {
-      // Move a cabeça para a extremidade inferior do disco
+    } else { 
+      // senao a tarefa com menor distancia esta na parte inferior do disco, a cabeça de leitura é movida para a extremidade inferior do disco
       disco->cabeca = 0;
-      // Encontra a tarefa mais próxima na parte inferior do disco
+      // encontra a tarefa mais próxima nessa parte da fila e a remove
       task_auxiliar = fila_pedidos;
       while (task_auxiliar->next != fila_pedidos && task_auxiliar->bloco <= disco->cabeca) {
         task_auxiliar = task_auxiliar->next;
