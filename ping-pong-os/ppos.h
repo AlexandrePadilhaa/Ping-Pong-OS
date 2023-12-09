@@ -32,10 +32,8 @@
 *** IMPORTANTE ***
 As funções before_* e after_* devem ser implementadas nos respectivos arquivos *.inc. 
 Ex. before_ppos_init() e after_ppos_init() devem ser implementados no arquivo ppos_init.inc
-
 As funções before_* são chamadas na primeira linha de código da função.
 Nao existe nenhuma variavel ou estrutura de dados inicializada antes que essa funcao eh chamada.
-
 As funcoes after_* são chamadas apos todas as variaveis e estruturas de dados do PPOS 
 estarem alocadas/desalocadas e inicializadas dentro do contexto e dos objetivos
 individuais de cada função. 

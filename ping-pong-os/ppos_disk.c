@@ -23,8 +23,14 @@ void capturaSinal(int signum) {
   disco->sinal = disco->state;
 }
 
+//Escalonamento FCFS - First Come First Served
+Pedido* Escalonamento_FCFS(){
+  return (Pedido *) queue_remove((queue_t **)&fila_pedidos, (queue_t *)fila_pedidos->head);
+}
+
 // interface de gerencia do disco
-void diskManager() { /*IMPLEMENTAR*/
+void diskManager() {
+   /*IMPLEMENTAR*/
 }
 
 // inicializacao do gerente de disco
@@ -83,6 +89,31 @@ int disk_block_read(int bloco, void *buffer) {
     printf("Erro: Bloco inválido.\n");
     return -1;
   }
+
+  //solicita semaforo
+  sem_down(&disco.sem_disco);
+
+  Pedido pedidoLeitura;
+  pedidoLeitura.bloco = bloco;
+  pedidoLeitura.buffer = buffer;
+  pedidoLeitura.tarefa = taskExec; //task em execução cria pedido de leitura
+  pedidoLeitura.pedido = DISK_CMD_READ;
+
+  //adicionando pedido a fila
+   queue_append((queue_t **) &fila_pedidos, (queue_t *) &pedidoLeitura);
+
+  //acorda gerente de disco
+  if (disco->tarefa_gerenciadora->state == 's'){
+      task_resume(&disco->tarefa_gerenciadora);
+   }
+
+   //libera semaforo
+   sem_up(&disco.sem_disco);
+
+  //suspende tarefa
+   task_suspend(taskExec,&disco->tarefas_supensas);
+   task_yield();
+  
   return 0;
 }
 
@@ -92,6 +123,32 @@ int disk_block_write(int bloco, void *buffer) {
     printf("Erro: Bloco inválido.\n");
     return -1;
   }
+
+  
+  //solicita semaforo
+  sem_down(&disco.sem_disco);
+
+
+  Pedido pedidoEscrita;
+  pedidoEscrita.bloco = bloco;
+  pedidoEscrita.buffer = buffer;
+  pedidoEscrita.tarefa = taskExec; //task em execução cria pedido de escrita
+  pedidoEscrita.pedido = DISK_CMD_WRITE;
+
+  //adicionando pedido a fila
+   queue_append((queue_t **) &fila_pedidos, (queue_t *) &pedidoEscrita);
+
+    //acorda gerente de disco
+  if (disco->tarefa_gerenciadora->state == 's'){
+      task_resume(&disco->tarefa_gerenciadora);
+   }
+
+   //libera semaforo
+   sem_up(&disco.sem_disco);
+
+  //suspende tarefa
+   task_suspend(taskExec,&disco->tarefas_supensas);
+   task_yield();
 
   return 0;
 }

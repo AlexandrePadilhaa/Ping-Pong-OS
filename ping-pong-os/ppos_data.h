@@ -35,7 +35,7 @@ typedef struct task_t
 
   unsigned int tempo_final;
   unsigned int tempo_decorrido;
-   
+
 } task_t ;
 
 // estrutura que define um semáforo
@@ -69,13 +69,12 @@ typedef struct {
     int messageSize;
     int maxMessages;
     int countMessages;
-    
+
     semaphore_t sBuffer;
     semaphore_t sItem;
     semaphore_t sVaga;
-    
+
     unsigned char active;
 } mqueue_t ;
 
 #endif
-

@@ -30,11 +30,11 @@ void task_set_eet (task_t *task, int et){
     if(task != NULL){//ajuste na tarefa do parametro
         task->eet = et;
         task->ret = task->eet - task->tempo_decorrido;
-      
+
     }else{//ajuste na tarefa em execução
         taskExec->eet = et;
         taskExec->ret = task->eet - task->tempo_decorrido;
-      
+
     }
 
 }
@@ -70,7 +70,7 @@ static void temporizador () {// contar tarefas sistema
 			quantum--;
 		}
         task_set_eet(taskExec, task_get_eet(NULL) );
-        
+
 		if (quantum <= 0 && taskExec != taskDisp) {         
 			task_yield();
             quantum = QUANTUM_MAX;			
@@ -536,7 +536,7 @@ task_t * scheduler() {
             task_auxiliar = task_auxiliar->next;
 
         } while(task_auxiliar != readyQueue);  // só finaliza ao encontrar a próxima a ser executada
-    
+
         task_auxiliar = task_priori;
     }
     return task_auxiliar;
@@ -545,5 +545,4 @@ task_t * scheduler() {
     	printf("task %d foi escolhida pelo scheduler\n", task_auxiliar->id);
 	#endif
 }
-
 

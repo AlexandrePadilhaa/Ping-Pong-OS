@@ -47,23 +47,23 @@ int main (int argc, char *argv[])
    task_create (&Pang, Body, "    Pang") ;
    task_setprio (&Pang, 0);
    sleep(rand() % 3);
-   
+
    task_create (&Peng, Body, "        Peng") ;
    task_setprio (&Peng, -2);
    sleep(rand() % 3);
-   
+
    task_create (&Ping, Body, "            Ping") ;
    task_setprio (&Ping, -4);
    sleep(rand() % 3);
-   
+
    task_create (&Pong, Body, "                Pong") ;
    task_setprio (&Pong, -6);
    sleep(rand() % 3);
-   
+
    task_create (&Pung, Body, "                    Pung") ;
    task_setprio (&Pung, -8);
    sleep(rand() % 3);
-   
+
    task_join(&Pung);
    task_join(&Pong);
    task_join(&Ping);
