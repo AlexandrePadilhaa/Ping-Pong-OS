@@ -24,8 +24,44 @@ void capturaSinal(int signum) {
 }
 
 //Escalonamento CSCAN - Circular Scan
-Pedido* escalonamentoCSCAN(){
-  return 0;
+Pedido *escalonamentoCSCAN() {
+  if (fila_pedidos != NULL) {
+    Pedido *task_priori = fila_pedidos; // ponteiro para a próxima tarefa na fila
+    Pedido *task_auxiliar = fila_pedidos;
+    int menor_dist = abs(fila_pedidos->cabeca - task_priori->bloco);
+    int dist_aux = 0;
+
+    // Encontrar a tarefa com menor distância em relação à cabeça de leitura
+    do {
+      int dist_aux = abs(fila_pedidos->cabeca - task_auxiliar->bloco);
+      if (dist_aux < menor_dist) {
+        task_priori = task_auxiliar;
+        menor_dist = dist_aux;
+      }
+      // Próxima tarefa a ser comparada
+      task_auxiliar = task_auxiliar->next;
+    } while (task_auxiliar != fila_pedidos); // só finaliza ao encontrar a próxima a ser executada
+
+    // Verifica se é necessário fazer a busca circular
+    if (task_priori->bloco >= disco->cabeca) {
+      return (Pedido *)queue_remove((queue_t **)&fila_pedidos, (queue_t *)task_priori);
+    } else {
+      // Move a cabeça para a extremidade inferior do disco
+      disco->cabeca = 0;
+      // Encontra a tarefa mais próxima na parte inferior do disco
+      task_auxiliar = fila_pedidos;
+      while (task_auxiliar->next != fila_pedidos && task_auxiliar->bloco <= disco->cabeca) {
+        task_auxiliar = task_auxiliar->next;
+      }
+      if (task_auxiliar->bloco <= disco->cabeca) {
+        return (Pedido *)queue_remove((queue_t **)&fila_pedidos, (queue_t *)task_auxiliar);
+      } else {
+        return (Pedido *)queue_remove((queue_t **)&fila_pedidos, (queue_t *)task_priori);
+      }
+    }
+  } else {
+    return 0;
+  }
 }
 
 //Escalonamento FCFS - Shortest Seek-Time First
