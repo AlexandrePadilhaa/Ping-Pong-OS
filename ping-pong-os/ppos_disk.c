@@ -24,7 +24,7 @@ void capturaSinal(int signum) {
 }
 
 //Escalonamento CSCAN - Circular Scan
-void escalonamentoCSCAN() {
+Pedido* escalonamentoCSCAN() {
   if (fila_pedidos != NULL) {
     Pedido *task_priori = fila_pedidos; // ponteiro para a próxima tarefa na fila
     Pedido *task_auxiliar = fila_pedidos;
@@ -60,7 +60,7 @@ void escalonamentoCSCAN() {
 }
 
 //Escalonamento FCFS - Shortest Seek-Time First
-void escalonamentoSSTF(){
+Pedido* escalonamentoSSTF(){
   if(fila_pedidos != NULL) {
     Pedido* task_priori = fila_pedidos; // ponteiro para a prox tarefa na fila
     Pedido* task_auxiliar = fila_pedidos;
@@ -86,7 +86,7 @@ void escalonamentoSSTF(){
 }
 
 //Escalonamento FCFS - First Come, First Served
-void escalonamentoFCFS(){
+Pedido* escalonamentoFCFS(){
   if(fila_pedidos != NULL) {
      return (Pedido *) queue_remove((queue_t **)&fila_pedidos, (queue_t *)fila_pedidos->head);
   } else {
@@ -120,12 +120,12 @@ int disk_mgr_init(int *numBlocos, int *tamBloco) {
   // inicializa disco
   disco = (disk_t *)malloc(sizeof(disk_t));
   disco->sem_disco = (semaphore_t *)malloc(sizeof(semaphore_t));
-  disco->tarefas_suspensas = (semaphore_t *)malloc(sizeof(semaphore_t));
+  disco->tarefas_suspensas = (task_t *)malloc(sizeof(task_t));
   disco->state = 0; // sem uso
   sem_create(disco->tarefas_suspensas, 0);
 
   // inicializa tarefa gerenciadora
-  disco->tarefa_gerenciadora = (disk_t *)malloc(sizeof(disk_t));
+  disco->tarefa_gerenciadora = (task_t *)malloc(sizeof(task_t));
   disco->tarefa_gerenciadora->tipo_task = 0; // setando como tarefa de sistema
   disco->tarefa_gerenciadora->next = disco->tarefa_gerenciadora->prev = NULL;
   task_create(&disco->tarefa_gerenciadora, gerenciaDisco,

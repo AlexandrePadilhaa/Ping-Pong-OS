@@ -20,7 +20,7 @@ typedef struct disk_t {
   int state; // indica estado do disco, 0 para livre, 1 em utilizacao
   int sinal; // flag sinal de disco
   int blocos_percorridos; // blocos percorridos pelo leitor de disco
-  semaphore_t sem_disco;
+  semaphore_t *sem_disco;
   // completar com os campos necessarios
 } disk_t;
 
@@ -42,11 +42,11 @@ typedef struct FilaPedidos {
 // numBlocks: tamanho do disco, em blocos
 // blockSize: tamanho de cada bloco do disco, em bytes
 
-void escalonamentoFCFS();
+Pedido* escalonamentoFCFS();
 
-void escalonamentoSSTF();
+Pedido* escalonamentoFCFS();
 
-void escalonamentoCSCAN();
+Pedido* escalonamentoFCFS();
 
 void gerenciaDisco(void * args);
 
