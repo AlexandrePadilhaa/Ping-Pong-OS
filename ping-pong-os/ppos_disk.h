@@ -29,6 +29,10 @@ typedef struct Pedido {
   void *buffer; // Ponteiro genérico para o buffer
   int bloco;    // Valor do bloco
   int pedido;   // Valor do pedido (0 leitura 1 escrita)
+
+  struct Pedido *next;    // Ponteiro para o primeiro nó da fila
+  struct Pedido *prev;    // Ponteiro para o último nó da fila
+  int head;            // indica onde esta a cabeça do leitor
 } Pedido;
 
 typedef struct FilaPedidos {
@@ -36,6 +40,8 @@ typedef struct FilaPedidos {
   struct Pedido *prev;    // Ponteiro para o último nó da fila
   int head;            // indica onde esta a cabeça do leitor
 } FilaPedidos;
+
+
 
 // inicializacao do gerente de disco
 // retorna -1 em erro ou 0 em sucesso
