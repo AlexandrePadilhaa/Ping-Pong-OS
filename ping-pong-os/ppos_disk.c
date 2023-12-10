@@ -22,6 +22,68 @@ void capturaSinal(int signum)
   disco->sinal = disco->state;
 }
 
+//Escalonamento CSCAN - Circular Scan
+Pedido* escalonamentoCSCAN() {
+  if (fila_pedidos != NULL) {
+    Pedido *task_priori = fila_pedidos; // ponteiro para a próxima tarefa na fila
+    Pedido *task_auxiliar = fila_pedidos;
+    int menor_dist = abs(fila_pedidos->head - task_priori->bloco);
+    int dist_aux = 0;
+
+    // Encontrar a tarefa com menor distância em relação a cabeça de leitura
+    do {
+      int dist_aux = abs(fila_pedidos->head - task_auxiliar->bloco);
+      if (dist_aux < menor_dist) {
+        task_priori = task_auxiliar;
+        menor_dist = dist_aux;
+      }
+      // Próxima tarefa a ser comparada
+      task_auxiliar = task_priori;
+    } while (task_auxiliar != fila_pedidos); // só finaliza ao encontrar a próxima a ser executada
+
+    // se a tarefa com menor distancia esta na parte inferior do disco (ou na mesma posição da cabeça), a função retorna essa tarefa removendo-a da fila
+    if (task_priori->bloco <= fila_pedidos->head) {
+      return (Pedido *)queue_remove((queue_t **)&fila_pedidos, (queue_t *)task_priori);
+    } else { 
+      // senao a tarefa com menor distancia esta na parte superior do disco, a cabeça de leitura é movida para a extremidade inferior do disco
+      fila_pedidos->head = 0;
+      // encontra a tarefa mais próxima nessa parte da fila e a remove
+      task_auxiliar = fila_pedidos->next;
+      if (task_auxiliar->bloco <=  fila_pedidos->head) {
+        return (Pedido *)queue_remove((queue_t **)&fila_pedidos, (queue_t *)task_auxiliar);
+      }
+    }
+  } else {
+    return 0;
+  }
+}
+
+//Escalonamento FCFS - Shortest Seek-Time First
+Pedido* escalonamentoSSTF(){
+  if(fila_pedidos != NULL) {
+    Pedido* task_priori = fila_pedidos; // ponteiro para a prox tarefa na fila
+    Pedido* task_auxiliar = fila_pedidos;
+		int menor_dist = abs(fila_pedidos->head - task_priori->bloco);
+    int dist_aux = 0;
+
+    do{ // se a distância da task for menor em comparação a menor distancia encontrada, a nossa task auxiliar eh substituida e assim por diante
+        int dist_aux = abs(fila_pedidos->head - task_auxiliar->bloco);
+        if(dist_aux <  menor_dist) {
+            task_priori = task_auxiliar;
+						menor_dist = dist_aux;
+        }
+        //Proxima tarefa a ser comparada
+        task_auxiliar = task_auxiliar;
+    } while(task_auxiliar != fila_pedidos);  // só finaliza ao encontrar a próxima a ser executada
+
+    task_auxiliar = task_priori;
+    return (Pedido *) queue_remove((queue_t **) &fila_pedidos, (queue_t *) task_auxiliar);
+
+  } else {
+    return 0;
+  }
+}
+
 Pedido *escalonamentoFCFS()
 {
   if (fila_pedidos != NULL)
