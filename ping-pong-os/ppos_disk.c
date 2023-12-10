@@ -13,7 +13,7 @@
 
 disk_t *disco;
 FilaPedidos *fila_pedidos;
-struct sigaction action;
+struct sigaction action2;
 
 void capturaSinal(int signum) {
   if (disco->state == 0) {
@@ -96,7 +96,43 @@ Pedido* escalonamentoFCFS(){
 
 // interface de gerencia do disco
 void gerenciaDisco(void * args) {
-   /*IMPLEMENTAR*/
+   
+
+      while (1) {
+     
+      sem_down(&disco->sem_disco);//solicita semaforo
+
+      if (disco->sinal){// acorda tarefa que recebe o sinal 
+         task_resume(disco->tarefa_atual); 
+         disco->sinal = 0;
+      }
+
+       disco->state = disk_cmd(DISK_CMD_STATUS,0,0);
+
+        if ((disco->state == DISK_STATUS_IDLE)){
+
+          Pedido *pedidoFCFS = escalonamentoFCFS();
+        
+
+          if (!pedidoFCFS)
+          {
+            disco->blocos_percorridos = disco->blocos_percorridos + abs(fila_pedidos->head - pedidoFCFS->bloco);
+            fila_pedidos->head = pedidoFCFS->bloco;
+            disco->tarefa_atual = pedidoFCFS->tarefa;
+            
+            int pedido = disk_cmd(pedidoFCFS->pedido,pedidoFCFS->bloco,pedidoFCFS->buffer);
+            if(pedido == 0){
+               printf("Agendamento concluido\n Bloco percorridos até o momento - %d \n",disco->blocos_percorridos);
+            }else{
+               printf("Error ao realizar agendamento");
+            }
+          }
+          
+            sem_up(&disco->sem_disco);
+            task_yield(); 
+
+        }
+      }
 }
 
 // inicializacao do gerente de disco
@@ -137,10 +173,10 @@ int disk_mgr_init(int *numBlocos, int *tamBloco) {
   fila_pedidos->prev = NULL;
 
   // inicializa sinal
-  action.sa_handler = capturaSinal;
-  sigemptyset(&action.sa_mask);
-  action.sa_flags = 0;
-  sigaction(SIGUSR1, &action, 0);
+  action2.sa_handler = capturaSinal;
+  sigemptyset(&action2.sa_mask);
+  action2.sa_flags = 0;
+  sigaction(SIGUSR1, &action2, 0);
 
   return 0;
 }
