@@ -59,9 +59,14 @@ Pedido *escalonamentoCSCAN()
       fila_pedidos->head = 0;
       // encontra a tarefa mais próxima nessa parte da fila e a remove
       task_auxiliar = fila_pedidos->next;
-      if (task_auxiliar->bloco <= fila_pedidos->head)
+
+      while (task_auxiliar != fila_pedidos)
       {
-        return (Pedido *)queue_remove((queue_t **)&fila_pedidos, (queue_t *)task_auxiliar);
+        if (task_auxiliar->bloco <= fila_pedidos->head)
+        {
+          return (Pedido *)queue_remove((queue_t **)&fila_pedidos, (queue_t *)task_auxiliar);
+        }
+        task_auxiliar = task_auxiliar->next;
       }
     }
   }
