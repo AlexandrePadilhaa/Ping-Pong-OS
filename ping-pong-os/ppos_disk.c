@@ -119,8 +119,6 @@ Pedido *escalonamentoFCFS()
 void gerenciaDisco(void *args)
 { // não é executado nunca
 
-  printf("inicio  gerencia do disco\n");
-
   while (true)
   {
     // obtém o semáforo de acesso ao disco
@@ -157,12 +155,9 @@ void gerenciaDisco(void *args)
     }
     // libera o semáforo de acesso ao disco
     sem_down(&disco->sem_disco);
-    // suspende a tarefa corrente (retorna ao dispatcher)
-    //queue_append((queue_t **)&disco->tarefas_suspensas, (queue_t *)disco->tarefa_gerenciadora);
-
+    
     task_yield();
   }
-  printf("FIM  gerencia do disco\n");
 }
 
 // inicializacao do gerente de disco
@@ -242,10 +237,6 @@ int disk_block_read(int bloco, void *buffer)
   // libera semaforo
   sem_up(&disco->sem_disco);
 
-  // suspende tarefas
-  //queue_append((queue_t **)&disco->tarefas_suspensas, (queue_t *)taskExec);
-
-  
   task_yield();
   return 0;
 }
@@ -274,10 +265,6 @@ int disk_block_write(int bloco, void *buffer)
   // libera semaforo
   sem_up(&disco->sem_disco);
 
-  // suspende tarefa
-  //queue_append((queue_t **)&disco->tarefas_suspensas, (queue_t *)taskExec);
-
-  
   task_yield();
   return 0;
 }

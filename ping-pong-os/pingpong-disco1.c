@@ -53,6 +53,7 @@ int main (int argc, char *argv[])
     printf ("%5d ms: buffer: [", systime()) ;
     for (j = 0; j < blocksize; j++)
       printf ("%c", buffer[j]) ;
+      printf("<--bloco %04d-------------------------------------------------->",i);
     printf ("]\n") ;
   }
 

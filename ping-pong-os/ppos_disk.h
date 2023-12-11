@@ -35,14 +35,6 @@ typedef struct Pedido {
   int head;            // indica onde esta a cabeça do leitor
 } Pedido;
 
-typedef struct FilaPedidos {
-  struct Pedido *next;    // Ponteiro para o primeiro nó da fila
-  struct Pedido *prev;    // Ponteiro para o último nó da fila
-  int head;            // indica onde esta a cabeça do leitor
-} FilaPedidos;
-
-
-
 // inicializacao do gerente de disco
 // retorna -1 em erro ou 0 em sucesso
 // numBlocks: tamanho do disco, em blocos
