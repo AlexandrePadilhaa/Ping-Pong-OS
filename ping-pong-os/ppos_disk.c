@@ -94,7 +94,7 @@ Pedido *escalonamentoSSTF()
     } while (task_auxiliar != fila_pedidos); // só finaliza ao encontrar a próxima a ser executada
 
     task_auxiliar = task_priori;
-    return (Pedido *)queue_remove((queue_t **)&fila_pedidos, (queue_t *)task_auxiliar);
+    return (Pedido *)queue_remove((queue_t **)&fila_pedidos, (queue_t *)&task_auxiliar);
   }
   else
   {
@@ -107,8 +107,7 @@ Pedido *escalonamentoFCFS()
 {
   if (fila_pedidos != NULL)
   {
-    (Pedido *)queue_remove((queue_t **)&fila_pedidos, (queue_t *)fila_pedidos);
-    return fila_pedidos;
+    return (Pedido *)queue_remove((queue_t **)&fila_pedidos, (queue_t *)fila_pedidos);
   }
   else
   {
@@ -135,14 +134,12 @@ void gerenciaDisco(void *args)
 
     // se o disco estiver livre e houver pedidos de E/S na fila
     disco->state = disk_cmd(DISK_CMD_STATUS, 0, 0);
-    printf("checando status %d \n", disco->state);
     if (disco->state == 1 && (fila_pedidos != NULL))
     {
       // escolhe na fila o pedido a ser atendido, usando FCFS
       // solicita ao disco a operação de E/S, usando disk_cmd()
-      Pedido *pedidoFCFS = escalonamentoFCFS();
+        Pedido *pedidoFCFS = escalonamentoFCFS();
         disco->blocos_percorridos = disco->blocos_percorridos + abs(fila_pedidos->head - pedidoFCFS->bloco);
-        printf("operacao blocos %d  %d \n", disco->blocos_percorridos, abs(fila_pedidos->head - pedidoFCFS->bloco));
         fila_pedidos->head = pedidoFCFS->bloco;
 
       if (pedidoFCFS != NULL)
@@ -152,7 +149,6 @@ void gerenciaDisco(void *args)
         disco->tarefa_atual = pedidoFCFS->tarefa;
 
         disk_cmd(pedidoFCFS->pedido, pedidoFCFS->bloco, pedidoFCFS->buffer);
-        printf("pedido enviado \n blocos percorridos: %d", disco->blocos_percorridos);
       }
       else
       {
@@ -162,7 +158,7 @@ void gerenciaDisco(void *args)
     // libera o semáforo de acesso ao disco
     sem_down(&disco->sem_disco);
     // suspende a tarefa corrente (retorna ao dispatcher)
-    task_suspend(&taskExec, &disco->tarefas_suspensas);
+    task_suspend(&disco->tarefa_gerenciadora, &disco->tarefas_suspensas);
     task_yield();
   }
   printf("FIM  gerencia do disco\n");
@@ -192,20 +188,20 @@ int disk_mgr_init(int *numBlocos, int *tamBloco)
   // inicializa disco
   disco = (disk_t *)malloc(sizeof(disk_t));
   disco->sem_disco = (semaphore_t *)malloc(sizeof(semaphore_t));
-  disco->tarefas_suspensas = NULL; //(task_t *)malloc(sizeof(task_t));
+  disco->tarefas_suspensas = NULL;
   disco->tarefa_atual = NULL;
   disco->blocos_percorridos = 0;
   disco->state = 0; // sem uso
-  sem_create(disco->sem_disco, 1);
+  sem_create(&disco->sem_disco, 1);
 
   // inicializa tarefa gerenciadora
   disco->tarefa_gerenciadora = (task_t *)malloc(sizeof(task_t));
   disco->tarefa_gerenciadora->tipo_task = 0; // setando como tarefa de sistema
   disco->tarefa_gerenciadora->next = disco->tarefa_gerenciadora->prev = NULL;
-  task_create(disco->tarefa_gerenciadora, gerenciaDisco, "Gerenciadora de disco");
+  task_create(&disco->tarefa_gerenciadora, gerenciaDisco, "Gerenciadora de disco");
 
   // inicializa fila de pedidos
-  fila_pedidos = (Pedido *)malloc(sizeof(Pedido)); // alteracao
+  fila_pedidos = (Pedido *)malloc(sizeof(Pedido));
   fila_pedidos->next = NULL;
   fila_pedidos->prev = NULL;
 
@@ -224,12 +220,6 @@ suspensa até que a operação solicitada seja completada.*/
 // leitura de um bloco, do disco para o buffer
 int disk_block_read(int bloco, void *buffer)
 {
-
-  /*if (bloco < 0 || bloco >= disco->blocos_percorridos) {
-    printf("Erro: Bloco inválido. 1\n");
-    return -1;
-  }*/
-  // printf("head : %d\n", fila_pedidos->head);
   // solicita semaforo
   sem_down(&disco->sem_disco);
 
@@ -238,8 +228,6 @@ int disk_block_read(int bloco, void *buffer)
   pedidoLeitura.buffer = buffer;
   pedidoLeitura.tarefa = taskExec; // task em execução cria pedido de leitura
   pedidoLeitura.pedido = DISK_CMD_READ;
-
-  // disco->tarefa_atual = pedidoFCFS->tarefa;
 
   // adicionando pedido a fila
   queue_append((queue_t **)&fila_pedidos, (queue_t *)&pedidoLeitura);
@@ -257,18 +245,12 @@ int disk_block_read(int bloco, void *buffer)
   task_suspend(&taskExec, &disco->tarefas_suspensas);
   
   task_yield();
-  printf("blocos percorridos: %d \n", disco->blocos_percorridos);
   return 0;
 }
 
 // escrita de um bloco, do buffer para o disco
 int disk_block_write(int bloco, void *buffer)
 {
-  /*if (bloco < 0 || bloco >= disco->blocos_percorridos) {
-    printf("Erro: Bloco inválido. 2\n");
-    return -1;
-  }*/
-
   // solicita semaforo
   sem_down(&disco->sem_disco);
 
@@ -294,6 +276,5 @@ int disk_block_write(int bloco, void *buffer)
   task_suspend(&taskExec, &disco->tarefas_suspensas);
   
   task_yield();
-  printf("blocos percorridos: %d \n", disco->blocos_percorridos);
   return 0;
 }
