@@ -57,12 +57,14 @@ void moverBody (void * arg)
     printf ("T%02d bloco %3d tem: [", task_id(), block_orig) ;
     for (j = 0; j < blocksize; j++)
       printf ("%c", buffer1[j]) ;
+    printf("<--bloco %04d-------------------------------------------------->",block_orig);
     printf ("]\n") ;
 
     // mostra o conteudo do bloco b2
     printf ("T%02d bloco %3d tem: [", task_id(), block_dest) ;
     for (j = 0; j < blocksize; j++)
       printf ("%c", buffer2[j]) ;
+    printf("<--bloco %04d-------------------------------------------------->",block_dest);
     printf ("]\n") ;
 
     // escreve o bloco b1 no disco
