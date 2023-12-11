@@ -107,7 +107,7 @@ Pedido *escalonamentoFCFS()
 {
   if (fila_pedidos != NULL)
   {
-    return (Pedido *)queue_remove((queue_t **)&fila_pedidos, (queue_t *)fila_pedidos);
+    return (Pedido *)queue_remove((queue_t **)&fila_pedidos, (queue_t *)&fila_pedidos);
   }
   else
   {
@@ -124,12 +124,12 @@ void gerenciaDisco(void *args)
   while (true)
   {
     // obtém o semáforo de acesso ao disco
-    sem_down(disco->sem_disco);
+    sem_down(&disco->sem_disco);
     // se foi acordado devido a um sinal do disco
     if (disco->sinal == 1)
     {
       // acorda a tarefa cujo pedido foi atendido
-      task_resume(disco->tarefa_atual);
+      task_resume(&disco->tarefa_atual);
     }
 
     // se o disco estiver livre e houver pedidos de E/S na fila
@@ -158,7 +158,8 @@ void gerenciaDisco(void *args)
     // libera o semáforo de acesso ao disco
     sem_down(&disco->sem_disco);
     // suspende a tarefa corrente (retorna ao dispatcher)
-    task_suspend(&disco->tarefa_gerenciadora, &disco->tarefas_suspensas);
+    //queue_append((queue_t **)&disco->tarefas_suspensas, (queue_t *)disco->tarefa_gerenciadora);
+
     task_yield();
   }
   printf("FIM  gerencia do disco\n");
@@ -225,7 +226,7 @@ int disk_block_read(int bloco, void *buffer)
 
   Pedido pedidoLeitura;
   pedidoLeitura.bloco = bloco;
-  pedidoLeitura.buffer = buffer;
+  pedidoLeitura.buffer = &buffer;
   pedidoLeitura.tarefa = taskExec; // task em execução cria pedido de leitura
   pedidoLeitura.pedido = DISK_CMD_READ;
 
@@ -242,7 +243,8 @@ int disk_block_read(int bloco, void *buffer)
   sem_up(&disco->sem_disco);
 
   // suspende tarefas
-  task_suspend(&taskExec, &disco->tarefas_suspensas);
+  //queue_append((queue_t **)&disco->tarefas_suspensas, (queue_t *)taskExec);
+
   
   task_yield();
   return 0;
@@ -273,7 +275,8 @@ int disk_block_write(int bloco, void *buffer)
   sem_up(&disco->sem_disco);
 
   // suspende tarefa
-  task_suspend(&taskExec, &disco->tarefas_suspensas);
+  //queue_append((queue_t **)&disco->tarefas_suspensas, (queue_t *)taskExec);
+
   
   task_yield();
   return 0;

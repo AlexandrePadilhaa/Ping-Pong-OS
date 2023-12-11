@@ -8,7 +8,7 @@ CFLAGS= #-DDEBUG
 DEPS=*.h
 
 #objetos
-OBJ=ppos-core-aux.o  pingpong-disco1.o ppos_disk.o  
+OBJ=ppos-core-aux.o  pingpong-disco2.o ppos_disk.o  
 
 #biblioteca
 LIB=libppos_static.a
@@ -16,7 +16,7 @@ LIB=libppos_static.a
 ppos-core-aux.o: ppos-core-aux.c $(DEPS)
 	$(CC) -g -c -o $@ $< $(CFLAGS)	
 
-pingpong-disco1.o: pingpong-disco1.c $(DEPS)
+pingpong-disco1.o: pingpong-disco2.c $(DEPS)
 	$(CC) -g -c -o $@ $< $(CFLAGS)	
 
 ppos_disk.o: ppos_disk.c $(DEPS)
